@@ -41,7 +41,9 @@ jobs:
 
     - name: Execute SQL Migrations
       run: |
-        mysql --host=localhost --port=3306 --user=root --password=secret belajar_spring_restful_api < ./database.sql
+        mysql --host=localhost --port=3306 --user=root --password=$MYSQL_ROOT_PASSWORD belajar_spring_restful_api < ./database.sql
+      env:
+        MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
 
     - name: Build with Maven
       run: mvn -B package --file pom.xml
