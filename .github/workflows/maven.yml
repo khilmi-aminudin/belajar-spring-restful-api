@@ -38,8 +38,7 @@ jobs:
         cache: maven
 
     - name: Execute SQL Migrations
-      run: |
-        make runMigrate
+      run: make runMigrate
 
     - name: Build with Maven
       run: mvn -B package --file pom.xml
