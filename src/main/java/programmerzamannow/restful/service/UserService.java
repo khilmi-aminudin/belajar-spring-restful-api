@@ -12,6 +12,7 @@ import programmerzamannow.restful.entity.User;
 import programmerzamannow.restful.model.RegisterUserRequest;
 import programmerzamannow.restful.repository.UserRepository;
 import programmerzamannow.restful.security.BCrypt;
+import programmerzamannow.restful.service.contracts.UserServiceInterface;
 
 import java.util.Set;
 
@@ -22,17 +23,13 @@ public class UserService implements UserServiceInterface {
     private UserRepository userRepository;
 
     @Autowired
-    private Validator validator;
+    private ValidationService validationService;
 
     @Override
     @Transactional
     public void register(RegisterUserRequest request) {
 
-        Set<ConstraintViolation<RegisterUserRequest>> constraintViolation = validator.validate(request);
-
-        if (!constraintViolation.isEmpty()){
-            throw new ConstraintViolationException(constraintViolation);
-        }
+        validationService.validate(request);
 
         if (userRepository.existsById(request.getUsername())){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "username already registered");
@@ -45,4 +42,5 @@ public class UserService implements UserServiceInterface {
 
         userRepository.save(user);
     }
+
 }
