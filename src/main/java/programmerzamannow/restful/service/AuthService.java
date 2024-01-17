@@ -41,6 +41,15 @@ public class AuthService implements AuthServiceInterface {
         }
     }
 
+    @Override
+    @Transactional
+    public void logout(User user){
+        user.setToken(null);
+        user.setTokenExpiredAt(null);
+
+        userRepository.save(user);
+    }
+
     private Long next30Days(){
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime futureDate = now.plus(30, ChronoUnit.DAYS);
