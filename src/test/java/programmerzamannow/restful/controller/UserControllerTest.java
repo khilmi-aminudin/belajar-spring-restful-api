@@ -18,6 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 
 import programmerzamannow.restful.entity.User;
 import programmerzamannow.restful.model.RegisterUserRequest;
+import programmerzamannow.restful.model.UserResponse;
 import programmerzamannow.restful.model.WebResponse;
 import programmerzamannow.restful.repository.UserRepository;
 import programmerzamannow.restful.security.BCrypt;
@@ -111,4 +112,109 @@ class UserControllerTest {
             assertNotNull(response.getErrors());
         });
     }
+
+    @Test
+    void getUserUnauthorized() throws Exception {
+        mockMvc.perform(
+            get("/users/current")
+                    .accept(MediaType.APPLICATION_JSON)
+                    .header("X-API-TOKEN", "salah")
+        ).andExpectAll(
+                status().isUnauthorized()
+        ).andDo(result -> {
+            WebResponse<String> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {});
+
+            assertNotNull(response.getErrors());
+            assertNull(response.getData());
+        });
+    }
+
+    @Test
+    void getUserUnauthorizedEmptyToken() throws Exception {
+        mockMvc.perform(
+                get("/users/current")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .header("X-API-TOKEN", "")
+        ).andExpectAll(
+                status().isUnauthorized()
+        ).andDo(result -> {
+            WebResponse<String> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {});
+
+            assertNotNull(response.getErrors());
+            assertNull(response.getData());
+        });
+    }
+
+    @Test
+    void getUserUnauthorizedTokenNotSent() throws Exception {
+        mockMvc.perform(
+                get("/users/current")
+                        .accept(MediaType.APPLICATION_JSON)
+        ).andExpectAll(
+                status().isUnauthorized()
+        ).andDo(result -> {
+            WebResponse<String> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {});
+
+            assertNotNull(response.getErrors());
+            assertNull(response.getData());
+        });
+    }
+
+    @Test
+    void getUserUnauthorizedTokenExpired() throws Exception {
+
+        User user = new User();
+        user.setName("test user");
+        user.setUsername("test");
+        user.setPassword(BCrypt.hashpw("rahasia", BCrypt.gensalt()));
+        user.setToken("validToken");
+        user.setTokenExpiredAt(System.currentTimeMillis() + 100000);
+
+        userRepository.save(user);
+
+        mockMvc.perform(
+                get("/users/current")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .header("X-API-TOKEN", user.getToken())
+        ).andExpectAll(
+                status().isOk()
+        ).andDo(result -> {
+            WebResponse<UserResponse> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {});
+
+            assertNull(response.getErrors());
+
+            assertNotNull(response.getData());
+            assertEquals(user.getName(), response.getData().getName());
+            assertEquals(user.getUsername(), response.getData().getUsername());
+        });
+    }
+    @Test
+    void getUserSuccess() throws Exception {
+
+        User user = new User();
+        user.setName("test user");
+        user.setUsername("test");
+        user.setPassword(BCrypt.hashpw("rahasia", BCrypt.gensalt()));
+        user.setToken("validToken");
+        user.setTokenExpiredAt(System.currentTimeMillis() + 100000000000L);
+
+        userRepository.save(user);
+
+        mockMvc.perform(
+                get("/users/current")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .header("X-API-TOKEN", user.getToken())
+        ).andExpectAll(
+                status().isOk()
+        ).andDo(result -> {
+            WebResponse<UserResponse> response = objectMapper.readValue(result.getResponse().getContentAsString(), new TypeReference<>() {});
+
+            assertNull(response.getErrors());
+
+            assertNotNull(response.getData());
+            assertEquals(user.getName(), response.getData().getName());
+            assertEquals(user.getUsername(), response.getData().getUsername());
+        });
+    }
+
 }
