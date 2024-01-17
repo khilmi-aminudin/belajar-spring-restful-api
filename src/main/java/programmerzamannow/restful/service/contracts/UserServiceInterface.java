@@ -10,4 +10,5 @@ public interface UserServiceInterface {
     UserResponse get(User user);
 
     UserResponse update(User user, UpdateUserRequest request);
+
 }
